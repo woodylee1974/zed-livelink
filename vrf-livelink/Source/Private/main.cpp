@@ -28,6 +28,8 @@
 #include "Roles/LiveLinkAnimationRole.h"
 #include "Roles/LiveLinkAnimationTypes.h"
 
+#include <iostream>
+
 
 IMPLEMENT_APPLICATION(ZEDLiveLinkPlugin, "ZEDLiveLink");
 
@@ -53,25 +55,60 @@ struct StreamedCameraData
 };
 
 
-void LibInit();
+void LibInit()
+{
+	GEngineLoop.PreInit(TEXT("VRFLiveLink -Messaging"));
+	ProcessNewlyLoadedUObjects();
+	// Tell the module manager that it may now process newly-loaded UObjects when new C++ modules are loaded
+	FModuleManager::Get().StartProcessingNewlyLoadedObjects();
+	FModuleManager::Get().LoadModule(TEXT("UdpMessaging"));
+}
 
+void UpdateCameraStaticData(FName SubjectName)
+{
+	FLiveLinkStaticDataStruct StaticData(FLiveLinkCameraStaticData::StaticStruct());
+	FLiveLinkCameraStaticData& CameraData = *StaticData.Cast<FLiveLinkCameraStaticData>();
+	CameraData.bIsAspectRatioSupported = true;
+	CameraData.bIsFieldOfViewSupported = true;
+	CameraData.bIsFocalLengthSupported = false;
+	CameraData.bIsFocusDistanceSupported = false;
+	CameraData.bIsProjectionModeSupported = true;
+	LiveLinkProvider->UpdateSubjectStaticData(SubjectName, ULiveLinkCameraRole::StaticClass(), MoveTemp(StaticData));
+}
+
+
+bool IsConnected = false;
+StreamedCameraData StreamedCamera("VRF0001");
 
 int main(int argc, char **argv)
 {
 	LibInit();
+	LiveLinkProvider = ILiveLinkProvider::CreateLiveLinkProvider(TEXT("ZED-003243242"));
+
+	cout << "Waiting for connection..." << endl;
+	//// Update static camera data.
+	if (LiveLinkProvider.IsValid()) {
+		UpdateCameraStaticData(StreamedCamera.SubjectName);
+	}
+    
+
+	while (true) {
+		if (LiveLinkProvider->HasConnection()) {
+			if (!IsConnected) {
+				IsConnected = true;
+				cout << "VRFLivelink is connected! " << endl;
+			}
+		}
+		else if (IsConnected) {
+			cout << "VRFLivelink is disconnected! " << endl;
+			IsConnected = false;
+		}
+	}
+
 	printf("Hello world!\n");
 
 	LiveLinkProvider.Reset();
 	return EXIT_SUCCESS;
 }
 
-//// Initialize tool
-void LibInit()
-{
-	GEngineLoop.PreInit(TEXT("ZEDLiveLink -Messaging"));
-	ProcessNewlyLoadedUObjects();
-	// Tell the module manager that it may now process newly-loaded UObjects when new C++ modules are loaded
-	FModuleManager::Get().StartProcessingNewlyLoadedObjects();
-	FModuleManager::Get().LoadModule(TEXT("UdpMessaging"));
-}
 
