@@ -30,8 +30,10 @@
 
 #include <iostream>
 
+#include "HAL/PlatformProcess.h"
 
-IMPLEMENT_APPLICATION(ZEDLiveLinkPlugin, "ZEDLiveLink");
+
+IMPLEMENT_APPLICATION(VRFLiveLinkPlugin, "VRFLiveLink");
 
 using namespace std;
 
@@ -90,7 +92,6 @@ int main(int argc, char **argv)
 	if (LiveLinkProvider.IsValid()) {
 		UpdateCameraStaticData(StreamedCamera.SubjectName);
 	}
-    
 
 	while (true) {
 		if (LiveLinkProvider->HasConnection()) {
@@ -103,9 +104,11 @@ int main(int argc, char **argv)
 			cout << "VRFLivelink is disconnected! " << endl;
 			IsConnected = false;
 		}
+		else {
+			//cout << "VRFLivelink is waiting for connection..." << endl;
+		}
+		FPlatformProcess::Sleep(0.01f);
 	}
-
-	printf("Hello world!\n");
 
 	LiveLinkProvider.Reset();
 	return EXIT_SUCCESS;

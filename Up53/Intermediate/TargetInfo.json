@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "ZEDUnrealLiveLink",
+			"Path": "..\\Source\\ZEDUnrealLiveLink.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "ZEDUnrealLiveLinkEditor",
+			"Path": "..\\Source\\ZEDUnrealLiveLinkEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}

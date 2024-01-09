@@ -1,0 +1,17 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-ZEDUnrealLiveLink-Win64-Debug.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"..\Intermediate\Build\Win64\x64\UnrealEditor\Debug\UnrealEd\SharedPCH.UnrealEd.Cpp17.InclOrderUnreal5_0.h.obj"
+"Programs\zed-livelink\Up53\Intermediate\Build\Win64\x64\UnrealEditor\Debug\ZEDUnrealLiveLink\AnimNode_ZEDLiveLinkPose.gen.cpp.obj"
+"Programs\zed-livelink\Up53\Intermediate\Build\Win64\x64\UnrealEditor\Debug\ZEDUnrealLiveLink\LiveLinkOrientationsRemapAsset.gen.cpp.obj"
+"Programs\zed-livelink\Up53\Intermediate\Build\Win64\x64\UnrealEditor\Debug\ZEDUnrealLiveLink\ZEDUnrealLiveLink.init.gen.cpp.obj"
+"Programs\zed-livelink\Up53\Intermediate\Build\Win64\x64\UnrealEditor\Debug\ZEDUnrealLiveLink\AnimNode_ZEDLiveLinkPose.cpp.obj"
+"Programs\zed-livelink\Up53\Intermediate\Build\Win64\x64\UnrealEditor\Debug\ZEDUnrealLiveLink\LiveLinkOrientationsRemapAsset.cpp.obj"
+"Programs\zed-livelink\Up53\Intermediate\Build\Win64\x64\UnrealEditor\Debug\ZEDUnrealLiveLink\ZEDUnrealLiveLink.cpp.obj"
+"..\Intermediate\Build\Win64\x64\UnrealEditor\Debug\Default.rc2.res"
+/OUT:"Programs\zed-livelink\Up53\Intermediate\Build\Win64\x64\UnrealEditor\Debug\ZEDUnrealLiveLink\UnrealEditor-ZEDUnrealLiveLink-Win64-Debug.lib"

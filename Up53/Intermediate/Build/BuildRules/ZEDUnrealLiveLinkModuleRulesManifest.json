@@ -1,0 +1,9 @@
+{
+	"SourceFiles": [
+		"D:\\UE\\UnrealEngine\\Engine\\Source\\Programs\\zed-livelink\\Up53\\Source\\ZEDUnrealLiveLinkEditor\\ZEDUnrealLiveLinkEditor.Build.cs",
+		"D:\\UE\\UnrealEngine\\Engine\\Source\\Programs\\zed-livelink\\Up53\\Source\\ZEDUnrealLiveLink\\ZEDUnrealLiveLink.Build.cs",
+		"D:\\UE\\UnrealEngine\\Engine\\Source\\Programs\\zed-livelink\\Up53\\Source\\ZEDUnrealLiveLink.Target.cs",
+		"D:\\UE\\UnrealEngine\\Engine\\Source\\Programs\\zed-livelink\\Up53\\Source\\ZEDUnrealLiveLinkEditor.Target.cs"
+	],
+	"EngineVersion": "5.3.2"
+}
