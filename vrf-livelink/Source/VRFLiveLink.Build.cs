@@ -33,6 +33,7 @@ public class VRFLiveLink : ModuleRules
 			"UdpMessaging",
 			"LiveLinkInterface",
 			"LiveLinkMessageBusFramework",
+			"Networking"
 		});
 
 	}
