@@ -10,6 +10,7 @@ namespace VRF {
     struct float4 {
         float x, y, z, w;
     };
+	const int ROLE_NAME = 64;
 };
 
 

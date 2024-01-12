@@ -64,14 +64,14 @@ struct StreamedCameraData
 	void UpdateSkeletonStaticData();
 	bool HandleListenerConnectionAccepted(FSocket* ClientSocket, const FIPv4Endpoint& ClientEndpoint);
 	void UpdateAnimationFrameData();
-	char* GetBuffer(int offset);
+	unsigned char* GetBuffer(int offset);
 	void RewindReadBuffer();
 
 private:
 	TSharedPtr<FTcpListener> Listener;
 	FSocket* ClientSocket;
 	FIPv4Endpoint ClientEndpoint;
-	char buffer[4096];
+	unsigned char Buffer[4096];
 	int BufSize;
 	int Pos;
 	int ReadPos;
@@ -107,13 +107,13 @@ StreamedCameraData StreamedCamera("VRF0001");
 
 void StreamedCameraData::InitCamera()
 {
-	const FString ExecutablePath = TEXT("python/bin/python3.8");
-	const FString PythonScriptPath = TEXT("python/script/launch_camera.py");
+	const FString ExecutablePath = TEXT("python/python.exe");
+	const FString PythonScriptPath = TEXT("python/vrfcam/vrfcam.py");
 
 	// Launch the executable
 	if (FPaths::FileExists(ExecutablePath) && FPaths::FileExists(PythonScriptPath))
 	{
-		FPlatformProcess::CreateProc(
+		FProcHandle handle = FPlatformProcess::CreateProc(
 			*ExecutablePath,
 			*PythonScriptPath,  // Command line parameters (can be nullptr)
 			true,     // Set to true to launch the process in the background
@@ -124,6 +124,9 @@ void StreamedCameraData::InitCamera()
 			nullptr,  // Don't specify a custom working directory
 			nullptr   // Process handle (output)
 		);
+		if (!handle.IsValid()) {
+			printf("Launch %s failed!\n", TCHAR_TO_ANSI(*PythonScriptPath));
+		}
 	}
 	else
 	{
@@ -131,15 +134,17 @@ void StreamedCameraData::InitCamera()
 		printf("Executable not found: %s\n", TCHAR_TO_ANSI(*ExecutablePath));
 	}
 	this->ClientSocket = NULL;
+	FIPv4Endpoint LocalEndpoint;
+	FIPv4Endpoint::Parse(TEXT("0.0.0.0:6699"), LocalEndpoint);
 	this->Listener = MakeShareable(new FTcpListener(LocalEndpoint));
-	Listener->OnConnectionAccepted().BindRaw(this, &StreamedCameraData::HandleListenerConnectionAccepted);
+	this->Listener->OnConnectionAccepted().BindRaw(this, &StreamedCameraData::HandleListenerConnectionAccepted);
 }
 
 void StreamedCameraData::UpdateFrameData()
 {
 	if (this->ReadDataFromSocket()) {
 	    this->UpdateCameraFrameData();
-	    this->UpdateSkletonStaticData();
+	    this->UpdateSkeletonStaticData();
 	    this->UpdateAnimationFrameData();
 		this->RewindReadBuffer();
 	}
@@ -151,9 +156,9 @@ void StreamedCameraData::RewindReadBuffer()
 	this->ReadPos = 0;
 }
 
-char* StreamedCameraData::GetBuffer(int offset)
+unsigned char* StreamedCameraData::GetBuffer(int offset)
 {
-	char* ret = this->buffer + this->ReadPos;
+	unsigned char* ret = this->Buffer + this->ReadPos;
 	this->ReadPos += offset;
 	return ret;
 }
@@ -168,7 +173,7 @@ bool StreamedCameraData::ReadDataFromSocket()
 	}
 
 	int ByteReads;
-	this->ClientSocket->RecvFrom(this->Buffer + this->Pos, this->BufSize - this->Pos, ByteReads);
+	this->ClientSocket->Recv(this->Buffer + this->Pos, this->BufSize - this->Pos, ByteReads);
 	this->Pos += ByteReads;
 	if (this->Pos < this->BufSize) {
 		return false;
@@ -183,6 +188,7 @@ void StreamedCameraData::UpdateCameraFrameData()
 	CameraData.AspectRatio = 16. / 9;
 	CameraData.FieldOfView = 90.f;
 	CameraData.ProjectionMode = ELiveLinkCameraProjectionMode::Perspective;
+	FTransform Pose = FTransform::Identity;
 	CameraData.Transform = Pose;
 	double StreamTime = FPlatformTime::Seconds();
 	CameraData.WorldTime = StreamTime;
@@ -211,13 +217,13 @@ void StreamedCameraData::UpdateAnimationFrameData()
 	FLiveLinkFrameDataStruct FrameData(FLiveLinkAnimationFrameData::StaticStruct());
 	FLiveLinkAnimationFrameData& AnimationData = *FrameData.Cast<FLiveLinkAnimationFrameData>();
 
-	FName SubjectName = FName(TEXT(this->GetBuffer(ROLE_NAME));
+	FName AnimationSubjectName = FName((const char*)this->GetBuffer(VRF::ROLE_NAME));
 	double StreamTime = FPlatformTime::Seconds();
 	AnimationData.WorldTime = StreamTime;
 
 	TMap<FString, FTransform> rigBoneTarget;
 	VRF::float3 bodyPosition = READ_FIELD("BodyPosition", VRF::float3);
-	VRF::float4 bodyRotation = READ_FIELD("BodyOrientation", VRF::float3);
+	VRF::float4 bodyRotation = READ_FIELD("BodyOrientation", VRF::float4);
 
 	for (int i = 0; i < targetBone.Num(); i++)
 	{
@@ -238,10 +244,10 @@ void StreamedCameraData::UpdateAnimationFrameData()
 
 	for (int i = 1; i < targetBone.Num() / 2; i++)
 	{
+		VRF::float3 localTranslation = READ_FIELD("LocalTranslate", VRF::float3);
 		VRF::float4 localRotation = READ_FIELD("LocalOrientation", VRF::float4);
-		VRF::float3 worldTranslation = READ_FIELD("WorldTranslate", VRF::float3);
 
-		position = FVector(worldTranslation.x, worldTranslation.y, worldTranslation.z);
+		position = FVector(localTranslation.x, localTranslation.y, localTranslation.z);
 		if (position.ContainsNaN())
 		{
 			position = FVector::ZeroVector;
@@ -277,10 +283,10 @@ void StreamedCameraData::UpdateAnimationFrameData()
 }
 
 
-bool StreamedCameraData::HandleListenerConnectionAccepted(FSocket* ClientSocket, const FIPv4Endpoint& ClientEndpoint)
+bool StreamedCameraData::HandleListenerConnectionAccepted(FSocket* aClientSocket, const FIPv4Endpoint& aClientEndpoint)
 {
-	this->ClientSocket = ClientSocked;
-	this->ClientEndpoint = ClientEndpoint;
+	this->ClientSocket = aClientSocket;
+	this->ClientEndpoint = aClientEndpoint;
 
 	return true;
 }
