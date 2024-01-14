@@ -206,7 +206,7 @@ void StreamedCameraData::UpdateSkeletonStaticData()
 		AnimationData.BoneParents.Add(parentsIdx[i]);
 	}
 
-	LiveLinkProvider->UpdateSubjectStaticData(SubjectName, ULiveLinkAnimationRole::StaticClass(), MoveTemp(StaticData));
+	LiveLinkProvider->UpdateSubjectStaticData(FName("Superman"), ULiveLinkAnimationRole::StaticClass(), MoveTemp(StaticData));
 }
 
 #define READ_FIELD(name, type) \
@@ -217,9 +217,11 @@ void StreamedCameraData::UpdateAnimationFrameData()
 	FLiveLinkFrameDataStruct FrameData(FLiveLinkAnimationFrameData::StaticStruct());
 	FLiveLinkAnimationFrameData& AnimationData = *FrameData.Cast<FLiveLinkAnimationFrameData>();
 
-	FName AnimationSubjectName = FName((const char*)this->GetBuffer(VRF::ROLE_NAME));
+	//FName AnimationSubjectName = FName((const char*)this->GetBuffer(VRF::ROLE_NAME));
+	FName AnimationSubjectName = FName("Superman");
 	double StreamTime = FPlatformTime::Seconds();
 	AnimationData.WorldTime = StreamTime;
+	printf("UpdateAnimationFrameData at %14.4f\n", StreamTime);
 
 	TMap<FString, FTransform> rigBoneTarget;
 	VRF::float3 bodyPosition = READ_FIELD("BodyPosition", VRF::float3);

@@ -30,13 +30,6 @@ def points_to_orientation(pt1, pt2):
     return pt1, orientation
 
 
-def create_skeleton_data(segments):
-    data = SkeletonData("Superman")
-    for pt1, pt2 in segments:
-        bone = Bone()
-        bone.translate, bone.orientation = points_to_orientation(pt1, pt2)
-        data.bones.append(bone)
-    return data
 
 
 class Bone:
@@ -52,12 +45,21 @@ class SkeletonData:
          Bone x 34 /2 
        ]
     """
-    def __int__(self, name):
+    def __init__(self, name):
         self.name = name
         self.bones = []
 
     def add_bone(self, bone):
         self.bones.append(bone)
+
+
+def create_skeleton_data(role_name, segments):
+    data = SkeletonData(role_name)
+    for pt1, pt2 in segments:
+        bone = Bone()
+        bone.translate, bone.orientation = points_to_orientation(pt1, pt2)
+        data.bones.append(bone)
+    return data
 
 
 class TCPDataSender:
@@ -90,7 +92,7 @@ class TCPDataSender:
 
             return packed_string
         buffer = b''
-        buffer += pack_string(skeleton_data.name)
+        #buffer += pack_string(skeleton_data.name)
         for bone in skeleton_data.bones:
             buffer += struct.pack('fff', *bone.translate)
             buffer += struct.pack('ffff', *bone.orientation)
@@ -121,7 +123,14 @@ class TCPDataSender:
         
 if __name__ == '__main__':
     import time
+
     for i in range(10000):
         with TCPDataSender() as s:
-            s.send_data(b'hello world!')
+            segments = []
+            for i in range(17):
+                segment = [(i * 1.0, i * 1.0, i * 1.0), ((i + 1) * 1.0, (i + 1) * 1.0, (i + 1) * 1.0)]
+                segments.append(segment)
+
+            sk_data = create_skeleton_data("Superman", segments)
+            s.send_data(sk_data)
         time.sleep(0.5)
