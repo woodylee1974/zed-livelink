@@ -107,8 +107,8 @@ StreamedCameraData StreamedCamera("VRF0001");
 
 void StreamedCameraData::InitCamera()
 {
-	const FString ExecutablePath = TEXT("python/python.exe");
-	const FString PythonScriptPath = TEXT("python/vrfcam/vrfcam.py");
+	const FString ExecutablePath = TEXT("python/envs/3DHuman/python.exe");
+	const FString PythonScriptPath = TEXT("python/vrfcam/main.py");
 
 	// Launch the executable
 	if (FPaths::FileExists(ExecutablePath) && FPaths::FileExists(PythonScriptPath))
@@ -143,8 +143,6 @@ void StreamedCameraData::InitCamera()
 void StreamedCameraData::UpdateFrameData()
 {
 	if (this->ReadDataFromSocket()) {
-	    this->UpdateCameraFrameData();
-	    this->UpdateSkeletonStaticData();
 	    this->UpdateAnimationFrameData();
 		this->RewindReadBuffer();
 	}
@@ -281,7 +279,7 @@ void StreamedCameraData::UpdateAnimationFrameData()
 	}
 
 	AnimationData.Transforms = transforms;
-	LiveLinkProvider->UpdateSubjectFrameData(SubjectName, MoveTemp(FrameData));
+	LiveLinkProvider->UpdateSubjectFrameData(AnimationSubjectName, MoveTemp(FrameData));
 }
 
 
@@ -306,7 +304,6 @@ int main(int argc, char **argv)
 	//// Update static camera data.
 	if (LiveLinkProvider.IsValid()) {
 		StreamedCamera.InitCamera();
-		UpdateCameraStaticData(StreamedCamera.SubjectName);
 	}
 
 	while (true) {
@@ -314,6 +311,9 @@ int main(int argc, char **argv)
 			if (!IsConnected) {
 				IsConnected = true;
 				cout << "VRFLivelink is connected! " << endl;
+				UpdateCameraStaticData(StreamedCamera.SubjectName);
+				StreamedCamera.UpdateSkeletonStaticData();
+				StreamedCamera.UpdateCameraFrameData();
 			}
 			StreamedCamera.UpdateFrameData();
 		}
