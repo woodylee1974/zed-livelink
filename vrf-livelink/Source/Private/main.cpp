@@ -138,6 +138,9 @@ void StreamedCameraData::InitCamera()
 	FIPv4Endpoint::Parse(TEXT("0.0.0.0:6699"), LocalEndpoint);
 	this->Listener = MakeShareable(new FTcpListener(LocalEndpoint));
 	this->Listener->OnConnectionAccepted().BindRaw(this, &StreamedCameraData::HandleListenerConnectionAccepted);
+
+	//FIXME: this size should be obtained from sockets.
+	this->BufSize = 952;
 }
 
 void StreamedCameraData::UpdateFrameData()
@@ -187,6 +190,8 @@ void StreamedCameraData::UpdateCameraFrameData()
 	CameraData.FieldOfView = 90.f;
 	CameraData.ProjectionMode = ELiveLinkCameraProjectionMode::Perspective;
 	FTransform Pose = FTransform::Identity;
+	FRotator Rotation(0.0f, 180.0f, 0.0f);
+	Pose.SetRotation(FQuat(Rotation));
 	CameraData.Transform = Pose;
 	double StreamTime = FPlatformTime::Seconds();
 	CameraData.WorldTime = StreamTime;
@@ -219,7 +224,7 @@ void StreamedCameraData::UpdateAnimationFrameData()
 	FName AnimationSubjectName = FName("Superman");
 	double StreamTime = FPlatformTime::Seconds();
 	AnimationData.WorldTime = StreamTime;
-	printf("UpdateAnimationFrameData at %14.4f\n", StreamTime);
+	//printf("UpdateAnimationFrameData at %14.4f\n", StreamTime);
 
 	TMap<FString, FTransform> rigBoneTarget;
 	VRF::float3 bodyPosition = READ_FIELD("BodyPosition", VRF::float3);
@@ -248,6 +253,8 @@ void StreamedCameraData::UpdateAnimationFrameData()
 		VRF::float4 localRotation = READ_FIELD("LocalOrientation", VRF::float4);
 
 		position = FVector(localTranslation.x, localTranslation.y, localTranslation.z);
+		printf("%d - %7.2f, %7.2f, %7.2f\n", i, localTranslation.x, localTranslation.y, localTranslation.z);
+
 		if (position.ContainsNaN())
 		{
 			position = FVector::ZeroVector;
@@ -267,6 +274,8 @@ void StreamedCameraData::UpdateAnimationFrameData()
 	TArray<FTransform> transforms;
 	for (int i = 0; i < targetBone.Num() / 2; i++)
 	{
+		FString trf = rigBoneTarget[targetBone[i]].ToHumanReadableString();
+		//printf("%d - %s\n", i, TCHAR_TO_UTF8(*trf));
 		transforms.Push(rigBoneTarget[targetBone[i]]);
 	}
 
